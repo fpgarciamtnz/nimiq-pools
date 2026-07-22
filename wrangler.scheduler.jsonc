@@ -1,0 +1,10 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "nimiq-pools-football-data-scheduler",
+  "main": "./scheduler/football-data-scheduler.ts",
+  "compatibility_date": "2026-07-21",
+  "vars": {
+    "NIMIQ_POOLS_BASE_URL": "https://nimiq-pools.pages.dev",
+    "FOOTBALL_DATA_SCHEDULER_ENABLED": "false"
+  }
+}

@@ -1,0 +1,318 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+  runtime  = "cloudflare"
+}
+
+generator nodeClient {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma-node"
+  runtime  = "nodejs"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model GameConfig {
+  id                       Int       @id
+  title                    String    @default("World Cup Pick Party")
+  predictionDeadline       DateTime
+  knockoutPickemEnabledAt  DateTime?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+}
+
+model Pool {
+  id                       String            @id @default(cuid())
+  code                     String            @unique
+  title                    String
+  imageDataUrl             String?
+  competitionMode          String            @default("ballot_only")
+  knockoutPickemStartRound String?
+  ownerId                  String?
+  owner                    User?             @relation("PoolOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  memberships              PoolMembership[]
+  entries                  PredictionEntry[]
+  createdAt                DateTime          @default(now())
+  updatedAt                DateTime          @updatedAt
+
+  @@index([ownerId])
+}
+
+model User {
+  id          String            @id @default(cuid())
+  publicKey   String            @unique
+  address     String            @unique
+  sessions    Session[]
+  memberships PoolMembership[]
+  ownedPools  Pool[]            @relation("PoolOwner")
+  entries     PredictionEntry[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  tokenHash  String   @unique
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt  DateTime
+  lastSeenAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model AuthChallenge {
+  id        String   @id
+  message   String
+  origin    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+}
+
+model PoolMembership {
+  id        String   @id @default(cuid())
+  poolId    String
+  pool      Pool     @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   @default("member")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([poolId, userId])
+  @@index([userId])
+}
+
+model Team {
+  slug               String      @id
+  name               String
+  fifaCode           String      @unique
+  fifaRank           Int
+  qualifiedRankOrder Int
+  tier               String
+  footballDataId     Int?        @unique
+  logoUrl            String?
+  sourceUpdatedAt    DateTime?
+  result             TeamResult?
+  answers            PredictionAnswer[]
+  groupTeams         TournamentGroupTeam[]
+  groupPositionPicks GroupPositionPick[]
+  knockoutPicks      KnockoutPick[]
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  @@index([qualifiedRankOrder])
+  @@index([tier])
+}
+
+model TournamentGroup {
+  id        String                @id @default(cuid())
+  name      String                @unique
+  sortOrder Int
+  teams     TournamentGroupTeam[]
+  picks     GroupPositionPick[]
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+
+  @@index([sortOrder])
+}
+
+model TournamentGroupTeam {
+  id        String          @id @default(cuid())
+  groupId   String
+  group     TournamentGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  teamSlug  String
+  team      Team            @relation(fields: [teamSlug], references: [slug], onDelete: Cascade)
+  sortOrder Int
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@unique([groupId, teamSlug])
+  @@unique([groupId, sortOrder])
+  @@index([teamSlug])
+}
+
+model TeamResult {
+  id              String    @id @default(cuid())
+  finishStage     String?
+  guaranteedStage String?
+  source          String    @default("manual")
+  manualOverride  Boolean   @default(false)
+  sourceUpdatedAt DateTime?
+  teamSlug        String    @unique
+  team            Team      @relation(fields: [teamSlug], references: [slug], onDelete: Cascade)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model ApiFixture {
+  fixtureId       Int       @id
+  leagueRound     String?
+  statusShort     String
+  statusLong      String
+  elapsed         Int?
+  kickoffAt       DateTime
+  venueName       String?
+  venueCity       String?
+  homeTeamApiId   Int?
+  awayTeamApiId   Int?
+  homeTeamSlug    String?
+  awayTeamSlug    String?
+  homeTeamName    String
+  awayTeamName    String
+  homeGoals       Int?
+  awayGoals       Int?
+  penaltyHome     Int?
+  penaltyAway     Int?
+  isLive          Boolean   @default(false)
+  sourceUpdatedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([kickoffAt])
+  @@index([isLive])
+  @@index([statusShort])
+}
+
+model ApiStanding {
+  id              String   @id @default(cuid())
+  groupName       String
+  rank            Int
+  teamApiId       Int?
+  teamSlug        String?
+  teamName        String
+  points          Int
+  goalsDiff       Int
+  description     String?
+  form            String?
+  played          Int
+  win             Int
+  draw            Int
+  lose            Int
+  goalsFor        Int
+  goalsAgainst    Int
+  sourceUpdatedAt DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([groupName, teamName])
+  @@index([teamSlug])
+}
+
+model ApiSyncLog {
+  id            String    @id @default(cuid())
+  job           String
+  status        String
+  startedAt     DateTime  @default(now())
+  finishedAt    DateTime?
+  requestCount  Int       @default(0)
+  dailyRemaining String?
+  minuteLimit   String?
+  minuteRemaining String?
+  message       String?
+  error         String?
+}
+
+model ApiSyncMilestone {
+  id            String    @id @default(cuid())
+  fixtureId     Int
+  milestone     String
+  dueAt         DateTime
+  status        String    @default("pending")
+  attempts      Int       @default(0)
+  lastAttemptAt DateTime?
+  completedAt   DateTime?
+  message       String?
+  error         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([fixtureId, milestone])
+  @@index([dueAt])
+  @@index([status])
+}
+
+model ApiSyncState {
+  key           String    @id
+  status        String
+  lastStartedAt DateTime?
+  lastFinishedAt DateTime?
+  requestCount  Int       @default(0)
+  message       String?
+  error         String?
+  updatedAt     DateTime  @updatedAt
+}
+
+model PredictionEntry {
+  id             String             @id @default(cuid())
+  displayName    String
+  displayNameKey String
+  avatarKey      String?
+  poolId         String
+  pool           Pool               @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  userId         String?
+  user           User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  answers        PredictionAnswer[]
+  groupPositionPicks GroupPositionPick[]
+  knockoutPicks KnockoutPick[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@unique([poolId, displayNameKey])
+  @@unique([poolId, userId])
+  @@index([userId])
+}
+
+model PredictionAnswer {
+  id          String          @id @default(cuid())
+  questionKey String
+  teamSlug    String
+  team        Team            @relation(fields: [teamSlug], references: [slug], onDelete: Restrict)
+  entryId     String
+  entry       PredictionEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@unique([entryId, questionKey])
+  @@index([teamSlug])
+}
+
+model GroupPositionPick {
+  id        String          @id @default(cuid())
+  entryId   String
+  entry     PredictionEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  groupId   String
+  group     TournamentGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  position  Int
+  teamSlug  String
+  team      Team            @relation(fields: [teamSlug], references: [slug], onDelete: Restrict)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@unique([entryId, groupId, position])
+  @@unique([entryId, groupId, teamSlug])
+  @@index([groupId])
+  @@index([teamSlug])
+}
+
+model KnockoutPick {
+  id             String          @id @default(cuid())
+  entryId        String
+  entry          PredictionEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  fixtureId      Int
+  winnerTeamSlug String
+  winnerTeam     Team            @relation(fields: [winnerTeamSlug], references: [slug], onDelete: Restrict)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@unique([entryId, fixtureId])
+  @@index([fixtureId])
+  @@index([winnerTeamSlug])
+}

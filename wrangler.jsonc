@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "nimiq-pools",
+  "pages_build_output_dir": "./dist",
+  "compatibility_date": "2026-07-21",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "nimiq-pools-db",
+      "database_id": "1b19625a-6d82-4f8c-a69e-3274a6770d4f"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "name": "nimiq-pools",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "build:cloudflare": "nuxt build --preset=cloudflare-pages",
+    "db:generate": "prisma generate",
+    "db:init": "prisma migrate deploy && npm run db:seed",
+    "d1:create": "wrangler d1 create nimiq-pools-db",
+    "d1:migrate:local": "wrangler d1 execute DB --local --file prisma/migrations/20260721130000_nimiq_wallet_auth_and_ownership/migration.sql",
+    "d1:migrate:remote": "wrangler d1 execute DB --remote --file prisma/migrations/20260721130000_nimiq_wallet_auth_and_ownership/migration.sql",
+    "d1:reset:local": "wrangler d1 execute DB --local --file prisma/migrations/20260526000000_init/migration.sql && wrangler d1 execute DB --local --file prisma/migrations/20260528160000_api_football_integration/migration.sql && wrangler d1 execute DB --local --file prisma/migrations/20260531120000_pool_creator_media/migration.sql && wrangler d1 execute DB --local --file prisma/migrations/20260603090000_pickem_mode/migration.sql && wrangler d1 execute DB --local --file prisma/migrations/20260604130000_simplify_open_mvp/migration.sql && wrangler d1 execute DB --local --file prisma/migrations/20260604180000_knockout_pickem_config/migration.sql && wrangler d1 execute DB --local --file prisma/migrations/20260604190000_player_avatar_key/migration.sql && wrangler d1 execute DB --local --file prisma/migrations/20260604200000_guaranteed_stage/migration.sql && wrangler d1 execute DB --local --file prisma/migrations/20260604233000_pool_pickem_start_round/migration.sql && wrangler d1 execute DB --local --file prisma/migrations/20260616160000_api_sync_milestones/migration.sql && wrangler d1 execute DB --local --file prisma/migrations/20260617150000_clear_demo_scoring_data/migration.sql && wrangler d1 execute DB --local --file prisma/migrations/20260617170000_football_data_provider_reset/migration.sql && wrangler d1 execute DB --local --file prisma/migrations/20260721090000_exclude_third_place_and_recalculate_scoring/migration.sql && wrangler d1 execute DB --local --file prisma/migrations/20260721130000_nimiq_wallet_auth_and_ownership/migration.sql",
+    "d1:reset:remote": "wrangler d1 execute DB --remote --file prisma/migrations/20260526000000_init/migration.sql && wrangler d1 execute DB --remote --file prisma/migrations/20260528160000_api_football_integration/migration.sql && wrangler d1 execute DB --remote --file prisma/migrations/20260531120000_pool_creator_media/migration.sql && wrangler d1 execute DB --remote --file prisma/migrations/20260603090000_pickem_mode/migration.sql && wrangler d1 execute DB --remote --file prisma/migrations/20260604130000_simplify_open_mvp/migration.sql && wrangler d1 execute DB --remote --file prisma/migrations/20260604180000_knockout_pickem_config/migration.sql && wrangler d1 execute DB --remote --file prisma/migrations/20260604190000_player_avatar_key/migration.sql && wrangler d1 execute DB --remote --file prisma/migrations/20260604200000_guaranteed_stage/migration.sql && wrangler d1 execute DB --remote --file prisma/migrations/20260604233000_pool_pickem_start_round/migration.sql && wrangler d1 execute DB --remote --file prisma/migrations/20260616160000_api_sync_milestones/migration.sql && wrangler d1 execute DB --remote --file prisma/migrations/20260617150000_clear_demo_scoring_data/migration.sql && wrangler d1 execute DB --remote --file prisma/migrations/20260617170000_football_data_provider_reset/migration.sql && wrangler d1 execute DB --remote --file prisma/migrations/20260721090000_exclude_third_place_and_recalculate_scoring/migration.sql && wrangler d1 execute DB --remote --file prisma/migrations/20260721130000_nimiq_wallet_auth_and_ownership/migration.sql",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:push": "prisma db push",
+    "dev": "nuxt dev",
+    "deploy:cloudflare": "npm run build:cloudflare && wrangler pages deploy dist --project-name nimiq-pools",
+    "deploy:scheduler": "wrangler deploy --config wrangler.scheduler.jsonc",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "preview:cloudflare": "npm run build:cloudflare && wrangler pages dev dist --port 8788",
+    "test": "vitest run",
+    "test:nimiq-login": "tsx scripts/verify-nimiq-simulator-login.mts",
+    "postinstall": "nuxt prepare && prisma generate"
+  },
+  "dependencies": {
+    "@lucide/vue": "^1.16.0",
+    "@prisma/adapter-better-sqlite3": "^7.8.0",
+    "@prisma/adapter-d1": "^6.19.0",
+    "@prisma/client": "^6.19.0",
+    "better-sqlite3": "^12.10.0",
+    "nuxt": "^4.4.6",
+    "vue": "^3.5.34",
+    "vue-router": "^5.0.7",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@vue/test-utils": "^2.4.10",
+    "happy-dom": "^20.9.0",
+    "prisma": "^6.19.0",
+    "tsx": "^4.22.3",
+    "vitest": "^4.1.7",
+    "wrangler": "^4.97.0"
+  }
+}
